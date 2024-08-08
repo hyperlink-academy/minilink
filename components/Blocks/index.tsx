@@ -18,6 +18,7 @@ import { scanIndex } from "src/replicache/utils";
 import { v7 } from "uuid";
 import { useBlockMouseHandlers } from "./useBlockMouseHandlers";
 import { indent, outdent } from "src/utils/list-operations";
+import { CodeBlock } from "./CodeBlock";
 export type Block = {
   factID: string;
   parent: string;
@@ -205,6 +206,7 @@ export type BlockProps = {
 let textBlocks: { [k in Fact<"block/type">["data"]["value"]]?: boolean } = {
   text: true,
   heading: true,
+  code: true,
 };
 
 function Block(props: BlockProps) {
@@ -276,6 +278,7 @@ function Block(props: BlockProps) {
       }
       if (e.key === "Enter") {
         if (!entity_set.permissions.write) return;
+        if (props.type === "code") return;
         let newEntityID = v7();
         let position;
         if (props.listData) {
@@ -362,6 +365,8 @@ function Block(props: BlockProps) {
           <ImageBlock {...props} />
         ) : props.type === "link" ? (
           <ExternalLinkBlock {...props} />
+        ) : props.type === "code" ? (
+          <CodeBlock {...props} />
         ) : null}
       </div>
     </div>

@@ -130,6 +130,37 @@ export function BlockOptions(props: Props) {
                       permission_set: entity_set.set,
                       factID: v7(),
                       parent: props.parent,
+                      type: "code",
+                      position: generateKeyBetween(
+                        props.position,
+                        props.nextPosition,
+                      ),
+                      newEntityID: entity,
+                    });
+                  } else {
+                    entity = props.entityID;
+                    await rep?.mutate.assertFact({
+                      entity,
+                      attribute: "block/type",
+                      data: { type: "block-type-union", value: "code" },
+                    });
+                  }
+                }}
+              >
+                code
+              </ToolbarButton>
+              <ToolbarButton
+                tooltipContent="Add a card"
+                className="text-tertiary h-6"
+                onClick={async () => {
+                  let entity;
+                  if (!props.entityID) {
+                    entity = v7();
+
+                    await rep?.mutate.addBlock({
+                      permission_set: entity_set.set,
+                      factID: v7(),
+                      parent: props.parent,
                       type: "card",
                       position: generateKeyBetween(
                         props.position,
