@@ -48,14 +48,6 @@ export function CodeBlock(props: BlockProps) {
 
   return (
     <div className="border p-2 w-full relative">
-      {entitySet.permissions.write && (
-        <button
-          className="absolute top-0 right-0 bg-secondary text-white px-2 py-1 rounded text-xs"
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? "View" : "Edit"}
-        </button>
-      )}
       {isEditing && entitySet.permissions.write ? (
         <div className="grow-wrap" data-replicated-value={localCodeValue}>
           <textarea
@@ -86,6 +78,15 @@ export function CodeBlock(props: BlockProps) {
             blockProps={props}
           />
         </ErrorBoundary>
+      )}
+
+      {entitySet.permissions.write && (
+        <button
+          className="absolute top-0 right-0 bg-secondary text-white px-2 py-1 rounded text-xs"
+          onClick={() => setIsEditing(!isEditing)}
+        >
+          {isEditing ? "View" : "Edit"}
+        </button>
       )}
     </div>
   );
