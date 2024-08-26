@@ -31,6 +31,10 @@ const BlockAttributes = {
     type: "reference",
     cardinality: "one",
   },
+  "block/code": {
+    type: "string",
+    cardinality: "one",
+  },
 } as const;
 
 const LinkBlockAttributes = {

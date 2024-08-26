@@ -5,7 +5,8 @@ import { useSmoker, useToaster } from "components/Toast";
 import { transform } from "@babel/standalone";
 import { ErrorBoundary, useErrorBoundary } from "react-error-boundary";
 import { TextBlock } from "./TextBlock";
-import { useEntity } from "src/replicache";
+import { useEntity, useReplicache } from "src/replicache";
+import { useEntitySetContext } from "components/EntitySetProvider";
 
 export function Test() {
   let smoker = useSmoker();
@@ -26,27 +27,65 @@ export function Test() {
 }
 
 export function CodeBlock(props: BlockProps) {
-  let [state, setState] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const { rep } = useReplicache();
+  const codeValue = useEntity(props.entityID, "block/code");
+  const [localCodeValue, setLocalCodeValue] = useState("");
+  const entitySet = useEntitySetContext();
+
+  useEffect(() => {
+    setLocalCodeValue(codeValue?.data?.value || "");
+  }, [codeValue?.data?.value]);
+
+  const updateCode = (newCode: string) => {
+    setLocalCodeValue(newCode);
+    rep?.mutate.assertFact({
+      entity: props.entityID,
+      attribute: "block/code",
+      data: { type: "string", value: newCode },
+    });
+  };
+
   return (
-    <div className="border p-2 w-full">
-      <textarea
-        className="w-full"
-        value={state}
-        onChange={(e) => setState(e.currentTarget.value)}
-      />
-      <ErrorBoundary
-        resetKeys={[state]}
-        fallbackRender={(props) => {
-          return (
-            <ErrorFallback
-              error={props.error}
-              resetBoundary={props.resetErrorBoundary}
-            />
-          );
-        }}
-      >
-        <Result code={state} entityID={props.entityID} blockProps={props} />
-      </ErrorBoundary>
+    <div className="border p-2 w-full relative">
+      {entitySet.permissions.write && (
+        <button
+          className="absolute top-0 right-0 bg-secondary text-white px-2 py-1 rounded text-xs"
+          onClick={() => setIsEditing(!isEditing)}
+        >
+          {isEditing ? "View" : "Edit"}
+        </button>
+      )}
+      {isEditing && entitySet.permissions.write ? (
+        <div className="grow-wrap" data-replicated-value={localCodeValue}>
+          <textarea
+            className="w-full border h-full"
+            value={localCodeValue}
+            onChange={(e) => updateCode(e.currentTarget.value)}
+          />
+        </div>
+      ) : (
+        <ErrorBoundary
+          resetKeys={[codeValue?.data?.value]}
+          fallbackRender={(props: {
+            error: any;
+            resetErrorBoundary: () => void;
+          }) => {
+            return (
+              <ErrorFallback
+                error={props.error}
+                resetBoundary={props.resetErrorBoundary}
+              />
+            );
+          }}
+        >
+          <Result
+            code={codeValue?.data?.value || ""}
+            entityID={props.entityID}
+            blockProps={props}
+          />
+        </ErrorBoundary>
+      )}
     </div>
   );
 }
@@ -87,11 +126,11 @@ const Result = (props: {
         `,
         {
           presets: ["react"],
-        },
+        }
       ).code;
       return { result: scopeeval.evaluate(code || "") };
     } catch (e) {
-      return { error: e.message };
+      return { error: (e as Error).message };
     }
   }, [props.code, props.entityID]);
   let NewComponent = result.result;
