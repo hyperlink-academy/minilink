@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ai-sdk/anthropic": "^0.0.48",
     "@babel/standalone": "^7.25.3",
     "@baselime/node-opentelemetry": "^0.5.8",
     "@nytimes/react-prosemirror": "^0.6.1",
@@ -24,6 +25,7 @@
     "@supabase/supabase-js": "^2.43.2",
     "@vercel/analytics": "^1.3.1",
     "@vercel/kv": "^1.0.1",
+    "ai": "^3.3.19",
     "base64-js": "^1.5.1",
     "colorjs.io": "^0.5.2",
     "drizzle-orm": "^0.30.10",

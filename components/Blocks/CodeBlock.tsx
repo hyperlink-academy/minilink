@@ -7,6 +7,9 @@ import { ErrorBoundary, useErrorBoundary } from "react-error-boundary";
 import { TextBlock } from "./TextBlock";
 import { useEntity, useReplicache } from "src/replicache";
 import { useEntitySetContext } from "components/EntitySetProvider";
+import { useSubscribe } from "replicache-react";
+import { useCompletion } from "ai/react";
+import { ButtonPrimary } from "components/Buttons";
 
 export function Test() {
   let smoker = useSmoker();
@@ -28,35 +31,16 @@ export function Test() {
 
 export function CodeBlock(props: BlockProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const { rep } = useReplicache();
   const codeValue = useEntity(props.entityID, "block/code");
-  const [localCodeValue, setLocalCodeValue] = useState("");
   const entitySet = useEntitySetContext();
-
-  useEffect(() => {
-    setLocalCodeValue(codeValue?.data?.value || "");
-  }, [codeValue?.data?.value]);
-
-  const updateCode = (newCode: string) => {
-    setLocalCodeValue(newCode);
-    rep?.mutate.assertFact({
-      entity: props.entityID,
-      attribute: "block/code",
-      data: { type: "string", value: newCode },
-    });
-  };
 
   return (
     <div className="border p-2 w-full relative">
       {isEditing && entitySet.permissions.write ? (
-        <div className="grow-wrap" data-replicated-value={localCodeValue}>
-          <textarea
-            autoFocus
-            className="w-full border h-full"
-            value={localCodeValue}
-            onChange={(e) => updateCode(e.currentTarget.value)}
-          />
-        </div>
+        <CodeEditor
+          initialValue={codeValue?.data?.value || ""}
+          entityID={props.entityID}
+        />
       ) : (
         <ErrorBoundary
           resetKeys={[codeValue?.data?.value]}
@@ -91,6 +75,82 @@ export function CodeBlock(props: BlockProps) {
     </div>
   );
 }
+
+const CodeEditor = ({
+  initialValue,
+  entityID,
+}: {
+  initialValue: string;
+  entityID: string;
+}) => {
+  const [localCodeValue, setLocalCodeValue] = useState(initialValue);
+  const [prompt, setPrompt] = useState("");
+  const { rep } = useReplicache();
+  const { complete, completion, isLoading } = useCompletion({
+    api: "/api/completions",
+  });
+
+  useEffect(() => {
+    setLocalCodeValue(initialValue);
+  }, [initialValue]);
+
+  useEffect(() => {
+    if (completion) {
+      const codeMatch = completion.match(/```js\n([\s\S]*?)\n```/);
+      if (codeMatch && codeMatch[1]) {
+        const generatedCode = codeMatch[1].trim();
+        setLocalCodeValue(generatedCode);
+        updateCode(generatedCode);
+      }
+    }
+  }, [completion]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newCode = e.currentTarget.value;
+    setLocalCodeValue(newCode);
+    updateCode(newCode);
+  };
+
+  const updateCode = (newCode: string) => {
+    rep?.mutate.assertFact({
+      entity: entityID,
+      attribute: "block/code",
+      data: { type: "string", value: newCode },
+    });
+  };
+
+  const handleGenerate = async () => {
+    await complete(prompt);
+  };
+
+  return (
+    <div>
+      <div className="mb-2">
+        <input
+          type="text"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder="Enter a prompt to generate code"
+          className="w-full p-2 border rounded"
+        />
+        <ButtonPrimary
+          onClick={handleGenerate}
+          disabled={isLoading}
+          className="mt-2"
+        >
+          {isLoading ? "Generating..." : "Generate"}
+        </ButtonPrimary>
+      </div>
+      <div className="grow-wrap" data-replicated-value={localCodeValue}>
+        <textarea
+          className="w-full border h-full min-h-[200px]"
+          value={localCodeValue}
+          onChange={handleChange}
+        />
+      </div>
+    </div>
+  );
+};
 
 const ErrorFallback = (props: { error: any; resetBoundary: () => void }) => {
   return (
@@ -127,6 +187,8 @@ const Result = (props: {
             useState: useState,
             createElement: createElement,
           },
+          useSubscribe,
+          useReplicache,
           useEntity,
           TextBlock,
           ctx: { entityID: props.entityID },
