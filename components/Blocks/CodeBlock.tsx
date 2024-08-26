@@ -59,6 +59,7 @@ export function CodeBlock(props: BlockProps) {
       {isEditing && entitySet.permissions.write ? (
         <div className="grow-wrap" data-replicated-value={localCodeValue}>
           <textarea
+            autoFocus
             className="w-full border h-full"
             value={localCodeValue}
             onChange={(e) => updateCode(e.currentTarget.value)}
@@ -103,7 +104,21 @@ const Result = (props: {
   entityID: string;
   blockProps: BlockProps;
 }) => {
+  const { permissions } = useEntitySetContext();
+
   let result = useMemo(() => {
+    if (props.code === "") {
+      return {
+        result: () => (
+          <div>
+            {permissions.write
+              ? "Hit 'Edit' to write a custom code block."
+              : "This is an empty custom block."}
+          </div>
+        ),
+      };
+    }
+
     try {
       let scopeeval = new Compartment({
         globals: {
@@ -132,7 +147,8 @@ const Result = (props: {
     } catch (e) {
       return { error: (e as Error).message };
     }
-  }, [props.code, props.entityID]);
+  }, [props.code, props.entityID, permissions.write]);
+
   let NewComponent = result.result;
   if (result.result) return <NewComponent {...props.blockProps} />;
   return <div>{result.error}</div>;
