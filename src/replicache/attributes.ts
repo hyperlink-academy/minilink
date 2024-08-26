@@ -14,6 +14,10 @@ const BlockAttributes = {
     type: "boolean",
     cardinality: "one",
   },
+  "block/check-list": {
+    type: "boolean",
+    cardinality: "one",
+  },
   "block/text": {
     type: "text",
     cardinality: "one",
@@ -33,6 +37,21 @@ const BlockAttributes = {
   },
   "block/code": {
     type: "string",
+    cardinality: "one",
+  },
+} as const;
+
+const MailboxAttributes = {
+  "mailbox/draft": {
+    type: "reference",
+    cardinality: "one",
+  },
+  "mailbox/archive": {
+    type: "reference",
+    cardinality: "one",
+  },
+  "mailbox/subscriber-count": {
+    type: "number",
     cardinality: "one",
   },
 } as const;
@@ -104,6 +123,7 @@ export const Attributes = {
   ...BlockAttributes,
   ...LinkBlockAttributes,
   ...ThemeAttributes,
+  ...MailboxAttributes,
 };
 type Attribute = typeof Attributes;
 export type Data<A extends keyof typeof Attributes> = {
@@ -137,7 +157,7 @@ export type Data<A extends keyof typeof Attributes> = {
   reference: { type: "reference"; value: string };
   "block-type-union": {
     type: "block-type-union";
-    value: "text" | "image" | "card" | "heading" | "link" | "code";
+    value: "text" | "image" | "card" | "heading" | "link" | "mailbox" | "code";
   };
   color: { type: "color"; value: string };
 }[(typeof Attributes)[A]["type"]];

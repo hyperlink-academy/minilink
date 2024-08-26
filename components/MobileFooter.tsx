@@ -2,7 +2,7 @@
 import { useUIState } from "src/useUIState";
 import { Media } from "./Media";
 import { ThemePopover } from "./ThemeManager/ThemeSetter";
-import { TextToolbar } from "components/Toolbar";
+import { Toolbar } from "components/Toolbar";
 import { ShareOptions } from "./ShareOptions";
 import { HomeButton } from "./HomeButton";
 
@@ -12,8 +12,13 @@ export function MobileFooter(props: { entityID: string }) {
   return (
     <Media mobile className="w-full z-10 -mt-6 touch-none">
       {focusedBlock && focusedBlock.type == "block" ? (
-        <div className="w-full z-10 p-2 flex bg-bg-card ">
-          <TextToolbar
+        <div
+          className="w-full z-10 p-2 flex bg-bg-card "
+          onMouseDown={(e) => {
+            if (e.currentTarget === e.target) e.preventDefault();
+          }}
+        >
+          <Toolbar
             cardID={focusedBlock.parent}
             blockID={focusedBlock.entityID}
           />

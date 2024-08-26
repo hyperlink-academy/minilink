@@ -1,10 +1,16 @@
 "use client";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useSubscribe } from "replicache-react";
-import { DeepReadonlyObject, Replicache, WriteTransaction } from "replicache";
+import {
+  DeepReadonlyObject,
+  PushRequest,
+  PushRequestV1,
+  Replicache,
+  WriteTransaction,
+} from "replicache";
 import { Pull } from "./pull";
 import { mutations } from "./mutations";
-import { Attributes, Data } from "./attributes";
+import { Attributes, Data, FilterAttributes } from "./attributes";
 import { Push } from "./push";
 import { clientMutationContext } from "./clientMutationContext";
 import { supabaseBrowserClient } from "supabase/browserClient";
@@ -69,8 +75,12 @@ export function ReplicacheProvider(props: {
       ) as ReplicacheMutators,
       licenseKey: "l381074b8d5224dabaef869802421225a",
       pusher: async (pushRequest) => {
+        let smolpushRequest = {
+          ...pushRequest,
+          mutations: pushRequest.mutations.slice(0, 250),
+        } as PushRequest;
         return {
-          response: await Push(pushRequest, props.name, props.token),
+          response: await Push(smolpushRequest, props.name, props.token),
           httpRequestInfo: { errorMessage: "", httpStatusCode: 200 },
         };
       },
@@ -151,4 +161,36 @@ export function useEntity<A extends keyof typeof Attributes>(
   return Attributes[attribute].cardinality === "many"
     ? (d as CardinalityResult<A>)
     : (d[0] as CardinalityResult<A>);
+}
+
+export function useReferenceToEntity<
+  A extends keyof FilterAttributes<{ type: "reference" }>,
+>(attribute: A, entity: string) {
+  let { rep, initialFacts } = useReplicache();
+  let fallbackData = useMemo(
+    () =>
+      initialFacts.filter(
+        (f) =>
+          (f as Fact<A>).data.value === entity && f.attribute === attribute,
+      ),
+    [entity, attribute, initialFacts],
+  );
+  let data = useSubscribe(
+    rep,
+    async (tx) => {
+      if (entity === null) return null;
+      let initialized = await tx.get("initialized");
+      if (!initialized) return null;
+      return (
+        await tx
+          .scan<Fact<A>>({ indexName: "vae", prefix: `${entity}-${attribute}` })
+          .toArray()
+      ).filter((f) => f.attribute === attribute);
+    },
+    {
+      default: null,
+      dependencies: [entity, attribute],
+    },
+  );
+  return data || (fallbackData as Fact<A>[]);
 }
