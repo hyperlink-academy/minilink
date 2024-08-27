@@ -4,7 +4,7 @@ import { useMemo, useState, createElement, useEffect, useRef } from "react";
 import { useSmoker, useToaster } from "components/Toast";
 import { transform } from "@babel/standalone";
 import { ErrorBoundary, useErrorBoundary } from "react-error-boundary";
-import { TextBlock } from "./TextBlock";
+import { RenderedTextBlock, TextBlock } from "./TextBlock";
 import { useEntity, useReplicache } from "src/replicache";
 import { useEntitySetContext } from "components/EntitySetProvider";
 import { useSubscribe } from "replicache-react";
@@ -184,6 +184,7 @@ const Result = (props: {
           },
           scanIndex: scanIndex,
           useState,
+          RenderedTextBlock,
           useEffect,
           useSubscribe,
           useReplicache,
@@ -201,7 +202,7 @@ const Result = (props: {
         `,
         {
           presets: ["react"],
-        }
+        },
       ).code;
       return { result: scopeeval.evaluate(code || "") };
     } catch (e) {
