@@ -106,6 +106,11 @@ const CodeEditor = ({
     await complete(prompt);
   };
 
+  const handleUpdate = async () => {
+    const updatePrompt = `${prompt}\n\nExisting code:\n\`\`\`js\n${localCodeValue}\n\`\`\``;
+    await complete(updatePrompt);
+  };
+
   return (
     <div>
       <div className="mb-2">
@@ -113,16 +118,17 @@ const CodeEditor = ({
           type="text"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Enter a prompt to generate code"
+          placeholder="Enter a prompt to generate or update code"
           className="w-full p-2 border rounded"
         />
-        <ButtonPrimary
-          onClick={handleGenerate}
-          disabled={isLoading}
-          className="mt-2"
-        >
-          {isLoading ? "Generating..." : "Generate"}
-        </ButtonPrimary>
+        <div className="flex gap-2 mt-2">
+          <ButtonPrimary onClick={handleGenerate} disabled={isLoading}>
+            {isLoading ? "Generating..." : "Generate New"}
+          </ButtonPrimary>
+          <ButtonPrimary onClick={handleUpdate} disabled={isLoading}>
+            {isLoading ? "Updating..." : "Update Existing"}
+          </ButtonPrimary>
+        </div>
       </div>
       <div className="grow-wrap" data-replicated-value={localCodeValue}>
         <textarea
