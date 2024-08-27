@@ -10,24 +10,7 @@ import { useEntitySetContext } from "components/EntitySetProvider";
 import { useSubscribe } from "replicache-react";
 import { useCompletion } from "ai/react";
 import { ButtonPrimary } from "components/Buttons";
-
-export function Test() {
-  let smoker = useSmoker();
-  return (
-    <div>
-      <button
-        onClick={(e) => {
-          smoker({
-            text: "Hello world!",
-            position: { x: e.clientX, y: e.clientY },
-          });
-        }}
-      >
-        Toast
-      </button>
-    </div>
-  );
-}
+import { scanIndex } from "src/replicache/utils";
 
 export function CodeBlock(props: BlockProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -187,12 +170,20 @@ const Result = (props: {
             useState: useState,
             createElement: createElement,
           },
+          setInterval: (cb: () => void, i: number) => {
+            return window.setInterval(cb, i);
+          },
+          clearInterval: (i: number) => {
+            return window.clearInterval(i);
+          },
+          scanIndex: scanIndex,
+          useState,
+          useEffect,
           useSubscribe,
           useReplicache,
           useEntity,
           TextBlock,
           ctx: { entityID: props.entityID },
-          Test: Test,
         },
         __options__: true,
       });
