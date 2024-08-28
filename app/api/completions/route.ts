@@ -40,6 +40,9 @@ export async function POST(req: Request) {
             ${AttributeValueType}
 
             Use the <RenderedTextBlock> component to render text. It takes an entityID and renders the text of the block, looking up the "block/text" attribute.
+
+            Use the elementId function to get the IDs of elements, blocks and cards, in the document. It takes an entityID and returns an object with the IDs of the text and container elements.
+            ${elementID}
             `.replace("\n", " "),
           },
           {role: "user", content: prompt}
@@ -119,3 +122,14 @@ export type Data<A extends keyof typeof Attributes> = {
   color: { type: "color"; value: string };
 }[(typeof Attributes)[A]["type"]];
 `
+
+const elementID = `
+export const elementId = {
+  block: (id: string) => ({
+    text: \`block/\${id}/content\`,
+    container: \`block/\${id}/container\`,
+  }),
+  card: (id: string) => ({
+    container: \`card/\${id}/container\`,
+  }),
+`;

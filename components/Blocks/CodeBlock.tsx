@@ -11,6 +11,7 @@ import { useSubscribe } from "replicache-react";
 import { useCompletion } from "ai/react";
 import { ButtonPrimary } from "components/Buttons";
 import { scanIndex } from "src/replicache/utils";
+import { elementId } from "src/utils/elementId";
 
 export function CodeBlock(props: BlockProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -190,6 +191,7 @@ const Result = (props: {
           useReplicache,
           useEntity,
           TextBlock,
+          elementId,
           ctx: { entityID: props.entityID },
         },
         __options__: true,
