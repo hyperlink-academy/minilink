@@ -150,6 +150,31 @@ const ErrorFallback = (props: { error: any; resetBoundary: () => void }) => {
   );
 };
 
+let globals = {
+  document: {
+    getElementById: (id: string) => document.getElementById(id),
+  },
+  React: {
+    useState: useState,
+    createElement: createElement,
+  },
+  setInterval: (cb: () => void, i: number) => {
+    return window.setInterval(cb, i);
+  },
+  clearInterval: (i: number) => {
+    return window.clearInterval(i);
+  },
+  scanIndex: scanIndex,
+  useState,
+  RenderedTextBlock,
+  useEffect,
+  useSubscribe,
+  useReplicache,
+  useEntity,
+  TextBlock,
+  elementId,
+};
+
 const Result = (props: {
   code: string;
   entityID: string;
@@ -172,31 +197,7 @@ const Result = (props: {
 
     try {
       let scopeeval = new Compartment({
-        globals: {
-          document: {
-            getElementById: (id: string) => document.getElementById(id),
-          },
-          React: {
-            useState: useState,
-            createElement: createElement,
-          },
-          setInterval: (cb: () => void, i: number) => {
-            return window.setInterval(cb, i);
-          },
-          clearInterval: (i: number) => {
-            return window.clearInterval(i);
-          },
-          scanIndex: scanIndex,
-          useState,
-          RenderedTextBlock,
-          useEffect,
-          useSubscribe,
-          useReplicache,
-          useEntity,
-          TextBlock,
-          elementId,
-          ctx: { entityID: props.entityID },
-        },
+        globals,
         __options__: true,
       });
       let code = transform(
