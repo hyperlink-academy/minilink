@@ -173,6 +173,9 @@ const Result = (props: {
     try {
       let scopeeval = new Compartment({
         globals: {
+          document: {
+            getElementById: (id: string) => document.getElementById(id),
+          },
           React: {
             useState: useState,
             createElement: createElement,
