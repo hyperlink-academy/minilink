@@ -3,6 +3,7 @@ import { streamText, convertToCoreMessages } from 'ai';
 import { useEffect, useState } from 'react';
 import { useReplicache } from 'src/replicache';
 import { Attributes } from 'src/replicache/attributes';
+import mutations from 'src/replicache/mutations?raw';
 import { scanIndex } from 'src/replicache/utils';
 
 // Allow streaming responses up to 30 seconds
@@ -16,17 +17,8 @@ export async function POST(req: Request) {
     messages: [
         {
             role: "system",
-            content: `Your entire response should only be JavaScript using React, and the JSX syntax.
-            Your response should start with \`\`\`js and end with \`\`\`, so full code fences.
-            There should be no comments like "more content here", it should be complete and directly runnable.
-            Write the body of a function that returns JSX. You do not need to name the function or write the function() keyword or any other function declaration syntax. Return just the body of the function.
-            You do not need to import React.
-            You cannot use any other libraries.
-
-            If the prompt includes existing code in a fenced code block, modify that code according to the instructions. Otherwise, generate new code based on the prompt.
-
-            Here is an example component that gets the number of undone tasks in a checklist:
-            ${exampleComponent}
+            content: `
+            You are an expert front-end programmer. You are given a prompt and must generate code based on that prompt. The code you write will have access to a specific set of functions.
 
             The "scanIndex" function takes a transaction and returns an object of indexes.
             The "eav" method is used to get facts given an entity and an attribute.
@@ -43,6 +35,33 @@ export async function POST(req: Request) {
 
             Use the elementId function to get the IDs of elements, blocks and cards, in the document. It takes an entityID and returns an object with the IDs of the text and container elements.
             ${elementID}
+
+            You use replicache to read and write to the database. The "rep" object is the replicache client.
+            You can access the replicache client with "const { rep } = useReplicache();"
+            You can mutate the database with the "mutate" method on the replicache client.
+            The "mutations" module contains the mutation functions. 
+            This is the full source code of the mutations module:
+            ${startFence}
+            ${mutations}
+            ${endFence}
+
+
+            Your entire response should only be JavaScript using React, and the JSX syntax.
+            Your response should start with \`\`\`js and end with \`\`\`, so full code fences.
+            There should be no comments like "more content here", it should be complete and directly runnable.
+            Write the body of a function that returns JSX. You do not need to name the function or write the function() keyword or any other function declaration syntax. Return just the body of the function.
+            You can use props in the function. The props are of the type BlockProps:
+            ${startFence}
+            ${props}
+            ${endFence}
+
+            You do not need to import React.
+            You cannot use any other libraries.
+
+            If the prompt includes existing code in a fenced code block, modify that code according to the instructions. Otherwise, generate new code based on the prompt.
+
+            Here is an example component that gets the number of undone tasks in a checklist:
+            ${exampleComponent}
             `.replace("\n", " "),
           },
           {role: "user", content: prompt}
@@ -133,3 +152,27 @@ export const elementId = {
     container: \`card/\${id}/container\`,
   }),
 `;
+
+
+const props = `
+type Block = {
+  factID: string;
+  parent: string;
+  position: string;
+  value: string;
+  type: Fact<"block/type">["data"]["value"];
+  listData?: {
+    checklist?: boolean;
+    path: { depth: number; entity: string }[];
+    parent: string;
+    depth: number;
+  };
+};
+
+type BlockProps = {
+  entityID: string;
+  nextBlock: Block | null;
+  previousBlock: Block | null;
+  nextPosition: string | null;
+} & Block;
+`
