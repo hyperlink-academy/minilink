@@ -12,6 +12,8 @@ import { useCompletion } from "ai/react";
 import { ButtonPrimary } from "components/Buttons";
 import { scanIndex } from "src/replicache/utils";
 import { elementId } from "src/utils/elementId";
+import { v7 } from "uuid";
+import { generateKeyBetween } from "fractional-indexing";
 
 export function CodeBlock(props: BlockProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -169,6 +171,9 @@ let globals = {
   RenderedTextBlock,
   useEffect,
   useSubscribe,
+  v7,
+  generateKeyBetween,
+  useEntitySetContext,
   useReplicache,
   useEntity,
   TextBlock,

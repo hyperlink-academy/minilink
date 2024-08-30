@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useReplicache } from 'src/replicache';
 import { Attributes } from 'src/replicache/attributes';
 import mutations from 'src/replicache/mutations?raw';
+import EntitySetContext from 'components/EntitySetProvider?raw';
 import { scanIndex } from 'src/replicache/utils';
 
 // Allow streaming responses up to 30 seconds
@@ -13,7 +14,9 @@ export async function POST(req: Request) {
   const { prompt } = await req.json() as { prompt: string };
 
   const result = await streamText({
-    model: anthropic('claude-3-5-sonnet-20240620'),
+    model: anthropic('claude-3-5-sonnet-20240620', {
+        cacheControl: true
+    }),
     messages: [
         {
             role: "system",
@@ -31,10 +34,20 @@ export async function POST(req: Request) {
             The "Data" type is defined as follows:
             ${AttributeValueType}
 
+            When dealing with attributes with type "text" they are not plain text, but Yjs XML documents that will be rendered by Prosemirror.
+
+            Entities belong to different "entity sets" which define their permissions. You can access the current entity set, and the permissions of the current user with the "useEntitySetContext" hook.
+            This is the source code of the EntitySetContext component:
+            ${startFence}
+            ${EntitySetContext}
+            ${endFence}
+
             Use the <RenderedTextBlock> component to render text. It takes an entityID and renders the text of the block, looking up the "block/text" attribute.
 
             Use the elementId function to get the IDs of elements, blocks and cards, in the document. It takes an entityID and returns an object with the IDs of the text and container elements.
             ${elementID}
+
+            Use the the v7 function to generate a v7 uuid.
 
             You use replicache to read and write to the database. The "rep" object is the replicache client.
             You can access the replicache client with "const { rep } = useReplicache();"
@@ -44,7 +57,6 @@ export async function POST(req: Request) {
             ${startFence}
             ${mutations}
             ${endFence}
-
 
             Your entire response should only be JavaScript using React, and the JSX syntax.
             Your response should start with \`\`\`js and end with \`\`\`, so full code fences.
@@ -62,7 +74,10 @@ export async function POST(req: Request) {
 
             Here is an example component that gets the number of undone tasks in a checklist:
             ${exampleComponent}
-            `.replace("\n", " "),
+            `,
+            experimental_providerMetadata: {
+                anthropic: { cacheControl: { type: 'ephemeral' } },
+              },
           },
           {role: "user", content: prompt}
     ],
