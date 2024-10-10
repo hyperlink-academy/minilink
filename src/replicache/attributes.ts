@@ -206,7 +206,10 @@ export type Data<A extends keyof typeof Attributes> = {
     value: string;
   };
   reference: { type: "reference"; value: string };
-  "page-type-union": { type: "page-type-union"; value: "doc" | "canvas" };
+  "page-type-union": {
+    type: "page-type-union";
+    value: "doc" | "canvas" | "discussion";
+  };
   "block-type-union": {
     type: "block-type-union";
     value:

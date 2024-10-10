@@ -24,8 +24,16 @@ import { HomeButton } from "../HomeButton";
 import { Canvas } from "../Canvas";
 import { DraftPostOptions } from "../Blocks/MailboxBlock";
 import { Blocks } from "components/Blocks";
+
+import { Discussion } from "components/Blocks/CommentPanelBlock";
 import { MenuItem, Menu } from "../Layout";
-import { MoreOptionsTiny, CloseTiny, PaintSmall, ShareSmall } from "../Icons";
+import {
+  MoreOptionsTiny,
+  DeleteSmall,
+  CloseTiny,
+  PaintSmall,
+  ShareSmall,
+} from "../Icons";
 import { HelpPopover } from "../HelpPopover";
 import { CreateNewLeafletButton } from "app/home/CreateNewButton";
 import { scanIndex } from "src/replicache/utils";
@@ -131,6 +139,8 @@ function Page(props: { entityID: string; first?: boolean }) {
           }}
         />
       )}
+      {/* // pageWrapper is required so that items absolutely positioned items on the page border
+      (like canvasWidthHandle) can overflow the page itself */}
       <div className="pageWrapper w-fit flex relative snap-center">
         <div
           onClick={(e) => {
@@ -142,8 +152,9 @@ function Page(props: { entityID: string; first?: boolean }) {
           }}
           id={elementId.page(props.entityID).container}
           style={{
-            width: pageType === "doc" ? "var(--page-width-units)" : undefined,
             backgroundColor: "rgba(var(--bg-page), var(--bg-page-alpha))",
+            width:
+              pageType === "canvas" ? undefined : "var(--page-width-units)",
           }}
           className={`
             ${pageType === "canvas" ? "!lg:max-w-[1152px]" : "max-w-[var(--page-width-units)]"}
@@ -186,7 +197,10 @@ function Page(props: { entityID: string; first?: boolean }) {
 const PageContent = (props: { entityID: string }) => {
   let pageType = useEntity(props.entityID, "page/type")?.data.value || "doc";
   if (pageType === "doc") return <DocContent entityID={props.entityID} />;
-  return <Canvas entityID={props.entityID} />;
+  if (pageType === "discussion")
+    return <Discussion entityID={props.entityID} />;
+  if (pageType === "canvas") return <Canvas entityID={props.entityID} />;
+  return null;
 };
 
 const DocContent = (props: { entityID: string }) => {
